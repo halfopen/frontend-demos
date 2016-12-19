@@ -5,6 +5,6 @@
 
   图片点击放大，双指缩放
   
-- [image-upload](image-upload)
+- [upload-image](upload-image)
 
   jquery的ajaxfileupload和angular的angular-file-upload上传图片demo
