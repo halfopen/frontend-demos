@@ -1,0 +1,136 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="initial-scale=1, user-scalable=no, width=device-width, minimum-scale=1, maximum-scale=1, minimal-ui">
+    <title>上传图片Demo</title>
+
+    <!-- 引用jquery -->
+    <script src="http://cdn.bootcss.com/jquery/3.1.1/jquery.js"></script>
+
+    <!-- 引用ajaxfileupload.js -->
+    <script src="js/ajaxfileupload.js"></script>
+
+    <script src="http://code.angularjs.org/1.2.0/angular.min.js"></script>
+    <script src="js/angular-file-upload.js"></script>
+
+
+</head>
+
+<body>
+    <h2>Jquery上传图片- ajaxfileupload</h2>
+    <hr />
+    <img style="height:200px;" id="img1" src="" /><br/>
+    <hr />
+    <span id="upload" style="background: lightblue;padding: 2px;cursor: pointer; border-radius: 5px; margin: 10px;">上传图片</span>
+
+    <!-- 隐藏file标签 -->
+    <input id="fileToUpload" style="display: none;" type="file" name="file"><br/>
+
+
+    <h2>AngularJs上传图片- angular-file-upload</h2>
+    <div ng-app="myApp" ng-controller="myCtrl">
+        <img style="height:200px" ng-src="{{imgSrc}}" />
+        <hr/>
+        <span ng-click="uploadImage()" style="background: lightblue;padding: 2px;cursor: pointer; border-radius: 5px; margin: 10px;">上传图片</span>
+        <input id="upload2" style="display: none;" accept="image/*" type="file" nv-file-select uploader="uploader" multiple />
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //点击打开文件选择器  
+            $("#upload").on('click', function() {
+                $('#fileToUpload').click();
+            });
+
+            var upload;
+            upload = function() {
+                $.ajaxFileUpload({
+                    url: 'http://192.168.1.7:1080/uploadfile/upload_file.php',
+                    secureuri: false,
+                    fileElementId: 'fileToUpload', //file标签的id  
+                    dataType: 'json', //返回数据的类型  
+
+                    success: function(data, status) {
+                        //console.info(data, status);
+                        // //把图片替换  
+                        //var obj = jQuery.parseJSON(data);
+                        $("#img1").attr("src", data.img);
+
+                        // if (typeof(data.error) != 'undefined') {
+                        //     if (data.error != '') {
+                        //         alert(data.error);
+                        //     } else {
+                        //         alert(data.msg);
+                        //     }
+                        // }
+                    },
+                    error: function(data, status, e) {
+                        console.info(data, status, e);
+                    },
+                    complete: function(xmlHttpRequest) {
+                        $("#fileToUpload").on("change", upload);
+                    }
+                });
+            }
+
+            //选择文件之后执行上传  
+            $('#fileToUpload').on('change', function() {
+                console.info("change");
+                upload();
+            });
+        });
+    </script>
+
+
+    <script>
+        var app = angular.module("myApp", ['angularFileUpload']);
+
+        app.controller('myCtrl', ['$scope', 'FileUploader', function($scope, FileUploader) {
+            $scope.imgSrc = "";
+
+            $scope.uploadImage = function() {
+                angular.element("#upload2").click();
+                // console.info("upload");
+                // $scope.uploader.uploadAll();
+            }
+
+            var uploader = $scope.uploader = new FileUploader({
+                url: "http://192.168.1.7:1080/uploadfile/upload_file.php"
+            });
+            console.info(uploader);
+            uploader.onAfterAddingAll = function(addedFileItems) {
+                uploader.uploadAll();
+            };
+
+            uploader.filters.push({
+                name: 'syncFilter',
+                fn: function(item /*{File|FileLikeObject}*/ , options) {
+                    console.log('syncFilter');
+                    return this.queue.length < 10;
+                }
+            });
+
+            uploader.onAfterAddingAll = function(addedFileItems) {
+                //console.info(addedFileItems);
+                uploader.uploadAll();
+            };
+            //上传成功回调事件
+            uploader.onSuccessItem = function(fileItem, response, status, headers) {
+                console.info('onSuccessItem', fileItem, response, status, headers);
+                $scope.imgSrc = response.img;
+            };
+            // //上传失败回调事件
+            // uploader.onErrorItem = function(fileItem, response, status, headers) {
+            //     console.info('onErrorItem', fileItem, response, status, headers);
+            // };
+            // //全部上传回调事件
+            // uploader.onCompleteAll = function() {
+            //     console.info('onCompleteAll');
+            // };
+        }]);
+    </script>
+
+</body>
+
+</html>
